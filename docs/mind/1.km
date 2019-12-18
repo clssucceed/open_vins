@@ -1,0 +1,23 @@
+{
+    "root": {
+        "data": {
+            "id": "bywmawrrv7c0",
+            "created": 1575460967236,
+            "text": "slam"
+        },
+        "children": [
+            {
+                "data": {
+                    "id": "bywmc7c8fu80",
+                    "created": 1575461068605,
+                    "text": "topic",
+                    "layout": null
+                },
+                "children": []
+            }
+        ]
+    },
+    "template": "structure",
+    "theme": "classic",
+    "version": "1.4.43"
+}
