@@ -99,6 +99,7 @@ namespace ov_core {
                     cv::Rect img_roi = cv::Rect(x, y, size_x, size_y);
 
                     // Extract FAST features for this part of the image
+                    // https://docs.opencv.org/3.4/df/d0c/tutorial_py_fast.html
                     std::vector<cv::KeyPoint> pts_new;
                     cv::FAST(img(img_roi), pts_new, threshold, nonmaxSuppression);
 

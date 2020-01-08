@@ -520,10 +520,15 @@ void VioManager::do_feature_propagate_update(double timestamp) {
 
 
     // Now, lets get all features that should be used for an update that are lost in the newest frame
+    // feats_lost表示既没有被当前帧看到也没有被最老一帧看到的特征
+    // feats_marg表示被最老一帧看到的特征并且没有横跨整个滑窗
     std::vector<Feature*> feats_lost, feats_marg, feats_slam;
     feats_lost = trackFEATS->get_feature_database()->features_not_containing_newer(state->timestamp());
 
     // Don't need to get the oldest features untill we reach our max number of clones
+    // 当滑窗被填满之后,会触发此处逻辑:feats_marg是所有被最老一帧看到的特征,
+    // 即feats_marg的初始状态表示slam feature + 部分msckf feature(当前帧看不到,但是最老一帧能够看到),
+    // 然后后面会将feats_marg中的slam feature抽出来放到feats_maxtracks中
     if((int)state->n_clones() > state->options().max_clone_size) {
         feats_marg = trackFEATS->get_feature_database()->features_containing(state->margtimestep());
         if(trackARUCO != nullptr && timestamp-startup_time >= dt_statupdelay) {
@@ -533,6 +538,8 @@ void VioManager::do_feature_propagate_update(double timestamp) {
 
     // We also need to make sure that the max tracks does not contain any lost features
     // This could happen if the feature was lost in the last frame, but has a measurement at the marg timestep
+    // 如果某一个特征被最老一帧看到同时没有被当前帧看到,则将其归类到feats_marg
+    // 换句话说,feats_lost表示既没有被当前帧看到也没有被最老一帧看到的特征
     auto it1 = feats_lost.begin();
     while(it1 != feats_lost.end()) {
         if(std::find(feats_marg.begin(),feats_marg.end(),(*it1)) != feats_marg.end()) {
@@ -544,6 +551,8 @@ void VioManager::do_feature_propagate_update(double timestamp) {
     }
 
     // Find tracks that have reached max length, these can be made into SLAM features
+    // 从feats_marg中抽出feats_maxtracks
+    // feats_maxtracks: 横跨滑窗的所有feature
     std::vector<Feature*> feats_maxtracks;
     auto it2 = feats_marg.begin();
     while(it2 != feats_marg.end()) {
@@ -572,6 +581,8 @@ void VioManager::do_feature_propagate_update(double timestamp) {
         it0++;
     }
 
+    // 将feats_maxtracks中最后valid_amount个feature挪到feats_slam中
+    // 换句话说,feats_maxtracks现在只有系统处理不过来的slam feature,feats_slam是当前帧新增的slam feature
     // Append a new SLAM feature if we have the room to do so
     // Also check that we have waited our delay amount (normally prevents bad first set of slam points)
     if(state->options().max_slam_features > 0 && timestamp-startup_time >= dt_statupdelay && (int)state->features_SLAM().size() < state->options().max_slam_features+curr_aruco_tags) {
@@ -586,6 +597,8 @@ void VioManager::do_feature_propagate_update(double timestamp) {
         }
     }
 
+    // 将state中保存的旧的slam feature增加到feats_slam中
+    // 换句话说,feats_slam包含了当前帧的所有的slam feature(包括旧的和新的)
     // Loop through current SLAM features, we have tracks of them, grab them for this update!
     // Note: if we have a slam feature that has lost tracking, then we should marginalize it out
     // Note: if you do not use FEJ, these types of slam features *degrade* the estimator performance....
@@ -608,15 +621,22 @@ void VioManager::do_feature_propagate_update(double timestamp) {
     std::vector<Feature*> feats_slam_DELAYED, feats_slam_UPDATE;
     for(size_t i=0; i<feats_slam.size(); i++) {
         if(state->features_SLAM().find(feats_slam.at(i)->featid) != state->features_SLAM().end()) {
+            // old slam features
             feats_slam_UPDATE.push_back(feats_slam.at(i));
             //ROS_INFO("[UPDATE-SLAM]: found old feature %d (%d measurements)",(int)feats_slam.at(i)->featid,(int)feats_slam.at(i)->timestamps_left.size());
         } else {
+            // new slam features
             feats_slam_DELAYED.push_back(feats_slam.at(i));
             //ROS_INFO("[UPDATE-SLAM]: new feature ready %d (%d measurements)",(int)feats_slam.at(i)->featid,(int)feats_slam.at(i)->timestamps_left.size());
         }
     }
 
     // Concatenate our MSCKF feature arrays (i.e., ones not being used for slam updates)
+    // msckf feature包括:
+    // 1. 既没有被当前帧看到也没有被最老一帧看到的feature
+    // 2. 被最老一帧看到的特征并且没有横跨整个滑窗的feature
+    // 3. 系统处理不过来的slam feature 
+    // 其中1,2的区分只是实现上没有做好,其实二者合到一起还是表示当前帧没有观测的特征
     std::vector<Feature*> featsup_MSCKF = feats_lost;
     featsup_MSCKF.insert(featsup_MSCKF.end(), feats_marg.begin(), feats_marg.end());
     featsup_MSCKF.insert(featsup_MSCKF.end(), feats_maxtracks.begin(), feats_maxtracks.end());
@@ -626,6 +646,7 @@ void VioManager::do_feature_propagate_update(double timestamp) {
     // Now that we have a list of features, lets do the EKF update for MSCKF and SLAM!
     //===================================================================================
 
+    // 此处没有按照square root论文中提到的顺序进行
     // Pass them to our MSCKF updater
     // We update first so that our SLAM initialization will be more accurate??
     updaterMSCKF->update(state, featsup_MSCKF);
@@ -665,6 +686,7 @@ void VioManager::do_feature_propagate_update(double timestamp) {
     updaterSLAM->change_anchors(state);
 
     // Marginalize the oldest clone of the state if we are at max length
+    // Question: 为什么没有看到marg x_E_k-1
     if((int)state->n_clones() > state->options().max_clone_size) {
         StateHelper::marginalize_old_clone(state);
     }

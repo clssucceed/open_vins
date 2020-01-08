@@ -83,9 +83,9 @@ bool FeatureInitializer::single_triangulation(Feature* feat, std::unordered_map<
 
     // Total number of measurements
     // Also set the first measurement to be the anchor frame
-    int total_meas = 0;
-    size_t anchor_most_meas = 0;
-    size_t most_meas = 0;
+    int total_meas = 0; // 所有相机总共的观测次数总和
+    size_t anchor_most_meas = 0; // 包含最多观测的相机id
+    size_t most_meas = 0; // 临时变量 
     for (auto const& pair : feat->timestamps) {
         total_meas += (int)pair.second.size();
         if(pair.second.size() > most_meas) {
@@ -94,6 +94,7 @@ bool FeatureInitializer::single_triangulation(Feature* feat, std::unordered_map<
         }
     }
     feat->anchor_cam_id = anchor_most_meas;
+    // Question: anchor cam最新观测的时间戳
     feat->anchor_clone_timestamp = feat->timestamps.at(feat->anchor_cam_id).back();
 
     // Our linear system matrices

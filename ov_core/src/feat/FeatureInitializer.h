@@ -28,7 +28,7 @@
 #include "utils/quat_ops.h"
 
 namespace ov_core {
-
+    // triangulate and refine
     /**
      * @brief Class that triangulates feature
      *

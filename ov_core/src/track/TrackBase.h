@@ -79,7 +79,8 @@ namespace ov_core {
          * Normally this would only be needed if we are optimizing our camera parameters, and thus should re-normalize.
          * @param camera_calib Calibration parameters for all cameras [fx,fy,cx,cy,d1,d2,d3,d4]
          * @param camera_fisheye Map of camera_id => bool if we should do radtan or fisheye distortion model
-         * @param correct_active If we should re-undistort active features in our database
+         * @param correct_active If we should re-undistort active features in our database. 
+         * 如果打开相机内参的在线标定,会将最新的标定结果通过此接口作用到FeatureBase,即所有Feature的normalized obv会被更新
          */
         void set_calibration(std::map<size_t,Eigen::VectorXd> camera_calib,
                              std::map<size_t, bool> camera_fisheye, bool correct_active=false) {
@@ -275,6 +276,7 @@ namespace ov_core {
         int num_features;
 
         /// Last set of images (use map so all trackers render in the same order)
+        // key: camera id
         std::map<size_t, cv::Mat> img_last;
 
         /// Last set of tracked points

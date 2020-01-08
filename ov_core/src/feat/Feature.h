@@ -29,6 +29,7 @@
 
 namespace ov_core {
 
+    // Feature的数据结构和前端重构之后的数据结构是一致的
     /**
      * @brief Sparse feature class used to collect measurements
      *
@@ -44,6 +45,7 @@ namespace ov_core {
         size_t featid;
 
         /// If this feature should be deleted
+        // Question: 为什么没有找到to_delete是0的地方
         bool to_delete;
 
         /// UV coordinates that this feature has been seen from (mapped by camera ID)
@@ -58,6 +60,7 @@ namespace ov_core {
         /// What camera ID our pose is anchored in!! By default the first measurement is the anchor.
         int anchor_cam_id = -1;
 
+        // Question: anchor cam最新观测的时间戳
         /// Timestamp of anchor clone
         double anchor_clone_timestamp;
 

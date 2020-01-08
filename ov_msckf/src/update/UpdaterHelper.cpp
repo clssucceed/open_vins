@@ -602,6 +602,7 @@ void UpdaterHelper::nullspace_project_inplace(Eigen::MatrixXd &H_f, Eigen::Matri
 
 
 
+// F2的QR分解,顺带将res做同样的行变换
 void UpdaterHelper::measurement_compress_inplace(Eigen::MatrixXd &H_x, Eigen::VectorXd &res) {
 
 
@@ -609,7 +610,9 @@ void UpdaterHelper::measurement_compress_inplace(Eigen::MatrixXd &H_x, Eigen::Ve
     if(H_x.rows() <= H_x.cols())
         return;
 
+    // Apply the left nullspace of H_x to all variables
     // Do measurement compression through givens rotations
+    // TODO(nichols.chen@dji.com): 此处没有利用F2的block upper-triangular进行加速
     Eigen::JacobiRotation<double> tempHo_GR;
     for (int n=0; n<H_x.cols(); n++) {
         for (int m=(int)H_x.rows()-1; m>n; m--) {

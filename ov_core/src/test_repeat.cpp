@@ -36,7 +36,7 @@
 using namespace ov_core;
 
 
-
+// 测试了一下连续两次生成的模拟器数据是否一致
 // Main function
 int main(int argc, char** argv)
 {

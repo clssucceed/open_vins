@@ -87,6 +87,7 @@ bool InertialInitializer::initialize_with_imu(double &time0, Eigen::Matrix<doubl
     }
     a_var = std::sqrt(a_var/((int)window_newest.size()-1));
 
+    // Question: 为什么需要window_newest中包含一个jump才会使用window_secondnew来初始化
     // If it is below the threshold just return
     if(a_var < _imu_excite_threshold) {
         ROS_WARN("InertialInitializer::initialize_with_imu(): no IMU excitation, below threshold %.4f < %.4f",a_var,_imu_excite_threshold);
@@ -119,12 +120,13 @@ bool InertialInitializer::initialize_with_imu(double &time0, Eigen::Matrix<doubl
     Eigen::Vector3d e_1(1,0,0);
 
     // Make x_axis perpendicular to z
-    Eigen::Vector3d x_axis = e_1-z_axis*z_axis.transpose()*e_1;
+    Eigen::Vector3d x_axis = e_1-z_axis*z_axis.transpose()*e_1; // z_axis.transpose() * x_axis = 0
     x_axis= x_axis/x_axis.norm();
 
-    // Get z from the cross product of these two
+    // Get y from the cross product of these two
     Eigen::Matrix<double,3,1> y_axis = skew_x(z_axis)*x_axis;
 
+    // x_axis, y_axis, z_axis是世界系三轴在IMU系下的表示,所以Ro = R_imu_world
     // From these axes get rotation
     Eigen::Matrix<double,3,3> Ro;
     Ro.block(0,0,3,1) = x_axis;

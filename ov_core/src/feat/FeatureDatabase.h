@@ -259,6 +259,7 @@ namespace ov_core {
 
     protected:
 
+        // 如果对顺序没有要求,unordered_map在增删查改的效率上都会比map要好,建议使用
         /// Our lookup array that allow use to query based on ID
         std::unordered_map<size_t, Feature *> features_idlookup;
 

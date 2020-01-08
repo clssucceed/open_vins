@@ -289,6 +289,10 @@ bool StateHelper::initialize(State *state, Type *new_variable, const std::vector
     size_t new_var_size = new_variable->size();
     assert((int)new_var_size == H_L.cols());
 
+    // 通过Givens Rotation进行QR分解:
+    // 1. 从左向右清空每一列对角线以下的元素为0
+    // 2. 每一列清空操作如下:自下而上相邻两行的对应列元素通过对应的Givens Rotation将下一行元素清空为0.
+    // (正是由于按照这种顺序执行Givens Rotation并且结合H_R(即论文中的Hx)本身的稀疏特性,使得H_R进行相应的Givens Rotation变换之后是一个block upper triangular矩阵)
     Eigen::JacobiRotation<double> tempHo_GR;
     for (int n = 0; n < H_L.cols(); ++n) {
         for (int m = (int) H_L.rows() - 1; m > n; m--) {
@@ -305,12 +309,14 @@ bool StateHelper::initialize(State *state, Type *new_variable, const std::vector
 
     // Separate into initializing and updating portions
     // 1. Invertible initializing system
+    // Cz1
     Eigen::MatrixXd Hxinit = H_R.block(0, 0, new_var_size, H_R.cols());
     Eigen::MatrixXd H_finit = H_L.block(0, 0, new_var_size, new_var_size);
     Eigen::VectorXd resinit = res.block(0, 0, new_var_size, 1);
     Eigen::MatrixXd Rinit = R.block(0, 0, new_var_size, new_var_size);
 
     // 2. Nullspace projected updating system
+    // Cz2
     Eigen::MatrixXd Hup = H_R.block(new_var_size, 0, H_R.rows() - new_var_size, H_R.cols());
     Eigen::VectorXd resup = res.block(new_var_size, 0, res.rows() - new_var_size, 1);
     Eigen::MatrixXd Rup = R.block(new_var_size, new_var_size, R.rows() - new_var_size, R.rows() - new_var_size);
@@ -319,6 +325,7 @@ bool StateHelper::initialize(State *state, Type *new_variable, const std::vector
     //==========================================================
 
     // Do mahalanobis distance testing
+    // Question: 这一步是在干什么
     Eigen::MatrixXd P_up = get_marginal_covariance(state, H_order);
     assert(Rup.rows() == Hup.rows());
     assert(Hup.cols() == P_up.cols());
@@ -346,6 +353,7 @@ bool StateHelper::initialize(State *state, Type *new_variable, const std::vector
 }
 
 
+// Question: 还没有看懂
 void StateHelper::initialize_invertible(State *state, Type *new_variable, const std::vector<Type *> &H_order, const Eigen::MatrixXd &H_R,
                                         const Eigen::MatrixXd &H_L, const Eigen::MatrixXd &R, const Eigen::VectorXd &res) {
 
@@ -458,9 +466,11 @@ void StateHelper::augment_clone(State *state, Eigen::Matrix<double, 3, 1> last_w
         exit(EXIT_FAILURE);
     }
 
+    // StateHelper::clone中已经将imu->pose() clone了一份放到state中了,为什么此处还要再insert_clone一次: 二者分别维护了state中_variables和_clones_IMU两个成员变量
     // Append the new clone to our clone vector
     state->insert_clone(state->timestamp(), pose);
 
+    // Question: 这边还没有看懂
     // If we are doing time calibration, then our clones are a function of the time offset
     // Logic is based on Mingyang Li and Anastasios I. Mourikis paper:
     // http://journals.sagepub.com/doi/pdf/10.1177/0278364913515286

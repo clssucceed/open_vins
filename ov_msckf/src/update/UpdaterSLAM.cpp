@@ -367,6 +367,7 @@ void UpdaterSLAM::update(State *state, std::vector<Feature*>& feature_vec) {
 
     // We have appended all features to our Hx_big, res_big
     // Delete it so we do not reuse information
+    // Question: 为什么Slam feature用完就扔
     for(size_t f=0; f < feature_vec.size(); f++){
         feature_vec[f]->to_delete = true;
     }

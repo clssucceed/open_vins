@@ -36,7 +36,7 @@
 using namespace ov_core;
 
 
-
+// 打印模拟器生成的imu和cam数据
 // Main function
 int main(int argc, char** argv)
 {

@@ -183,7 +183,7 @@ void Propagator::propagate_and_clone(State* state, double timestamp) {
         // NOTE: Q_summed = Phi_i*Q_summed*Phi_i^T + G*Q_i*G^T
         Phi_summed = F * Phi_summed;
         Qd_summed = F * Qd_summed * F.transpose() + Qdi;
-        Qd_summed = 0.5*(Qd_summed+Qd_summed.transpose());
+        Qd_summed = 0.5*(Qd_summed+Qd_summed.transpose()); // 对称化
         dt_summed +=  prop_data.at(i+1).timestamp-prop_data.at(i).timestamp;
     }
 
@@ -273,6 +273,7 @@ void Propagator::predict_and_compute(State *state, const IMUDATA data_minus, con
     // Now compute Jacobian of new state wrt old state and noise
     if (state->options().do_fej) {
 
+        // Question: fej的推导还没有看懂
         // This is the change in the orientation from the end of the last prop to the current prop
         // This is needed since we need to include the "k-th" updated orientation information
         Eigen::Matrix<double,3,3> Rfej = imu->Rot_fej();

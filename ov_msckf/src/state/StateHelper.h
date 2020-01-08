@@ -101,8 +101,8 @@ namespace ov_msckf {
          * @param state Pointer to state
          * @param new_variable Pointer to variable to be initialized
          * @param H_order Vector of pointers in order they are contained in the condensed state Jacobian
-         * @param H_R Jacobian of initializing measurements wrt variables in H_order
-         * @param H_L Jacobian of initializing measurements wrt new variable
+         * @param H_R Jacobian of initializing measurements wrt variables in H_order(Hx)
+         * @param H_L Jacobian of initializing measurements wrt new variable(Hf)
          * @param R Covariance of initializing measurements (isotropic)
          * @param res Residual of initializing measurements
          * @param chi_2_mult Value we should multiply the chi2 threshold by (larger means it will be accepted more measurements)

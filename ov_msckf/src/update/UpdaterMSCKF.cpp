@@ -29,6 +29,7 @@ using namespace ov_msckf;
 
 
 
+// 这个接口的调用者应该会只将有足够多观测的Feature传入,否则刚观测到的Feature就传入肯定会被清空,永远不会有可用的特征
 void UpdaterMSCKF::update(State *state, std::vector<Feature*>& feature_vec) {
 
     // Return if no features
@@ -226,6 +227,7 @@ void UpdaterMSCKF::update(State *state, std::vector<Feature*>& feature_vec) {
 
     // We have appended all features to our Hx_big, res_big
     // Delete it so we do not reuse information
+    // msckf feature只会使用一次,其作用在之后的帧中体现在R_k中(即体现在marg项中)
     for (size_t f=0; f < feature_vec.size(); f++){
         feature_vec[f]->to_delete = true;
     }
@@ -252,6 +254,7 @@ void UpdaterMSCKF::update(State *state, std::vector<Feature*>& feature_vec) {
     Eigen::MatrixXd R_big = _options.sigma_pix_sq*Eigen::MatrixXd::Identity(res_big.rows(),res_big.rows());
 
     // 6. With all good features update the state
+    // 当前版本是分别对New Slam feature, Old Slam feature和MSCKF feature进行EKFUpdate的,SquareRoot中只有最后进行了一次EKFUpdate
     StateHelper::EKFUpdate(state, Hx_order_big, Hx_big, res_big, R_big);
     rT5 =  boost::posix_time::microsec_clock::local_time();
 

@@ -30,6 +30,7 @@ void TrackKLT::feed_monocular(double timestamp, cv::Mat &img, size_t cam_id) {
     rT1 =  boost::posix_time::microsec_clock::local_time();
 
     // Histogram equalize
+    // Question: 为什么进行直方图均衡化
     cv::equalizeHist(img, img);
 
     // If we didn't have any successful tracks last time, just extract this time
@@ -42,6 +43,7 @@ void TrackKLT::feed_monocular(double timestamp, cv::Mat &img, size_t cam_id) {
 
     // First we should make that the last images have enough features so we can do KLT
     // This will "top-off" our number of tracks so always have a constant number
+    // TODO: (vinsft) 每一帧都提点以确保下面的klt track的特征数目始终保持不变,即每张图片都提供等量的信息
     perform_detection_monocular(img_last[cam_id], pts_last[cam_id], ids_last[cam_id]);
     rT2 =  boost::posix_time::microsec_clock::local_time();
 

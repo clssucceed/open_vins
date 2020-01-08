@@ -107,6 +107,7 @@ namespace ov_msckf {
         }
 
         /// Access current timestamp
+        // camera time stamp
         double timestamp() {
             return _timestamp;
         }
@@ -196,12 +197,14 @@ namespace ov_msckf {
         /// Pointer to the "active" IMU state (q_GtoI, p_IinG, v_IinG, bg, ba)
         IMU *_imu;
 
+        // stochastic imu clone有什么特殊含义: 因为covariance也被拷贝了
         /// Map between imaging times and clone poses (q_GtoIi, p_IiinG)
         std::unordered_map<double, PoseJPL*> _clones_IMU;
 
         /// Our current set of SLAM features (3d positions)
         std::unordered_map<size_t, Landmark*> _features_SLAM;
 
+        // Question: 为什么time offset只有一个,如果有多个相机怎么办?
         /// Time offset base IMU to camera (t_imu = t_cam + t_off)
         Vec *_calib_dt_CAMtoIMU;
 
@@ -217,6 +220,7 @@ namespace ov_msckf {
         /// Covariance of all active variables
         Eigen::MatrixXd _Cov;
 
+        // Question: _variables和上面的变量的关系是怎样的
         /// Vector of variables
         std::vector<Type *> _variables;
 

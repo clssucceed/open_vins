@@ -58,7 +58,7 @@ namespace ov_core {
             return first.response > second.response;
         }
 
-
+        // DOG原理详见https://blog.csdn.net/wsp_1138886114/article/details/81368890
         /**
          * @brief For a given small image region this will do the Difference of Gaussian (DOG) detection
          *
